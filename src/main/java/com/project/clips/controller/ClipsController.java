@@ -7,6 +7,8 @@ import com.project.clips.repo.UserRepo;
 import org.bson.BsonBinarySubType;
 import org.bson.types.Binary;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +18,7 @@ import java.io.IOException;
 import java.util.*;
 
 @RestController
-@CrossOrigin
+@CrossOrigin(origins = "http://localhost:4200",methods = RequestMethod.GET)
 public class ClipsController {
 
     @Autowired
@@ -40,8 +42,12 @@ public class ClipsController {
     }
 
     @GetMapping("/clips")
-    public List<Clips> getAllClips(){
-        return clipsRepo.findAllByOrderByTimestampDesc();
+    public List<Clips> getAllClips( @RequestParam(required = false,value = "offset") Integer offSet){
+        Pageable nextPageWithSixClips= PageRequest.of(0,6);
+        if(offSet!=null){
+            nextPageWithSixClips= PageRequest.of(offSet,6);
+        }
+        return clipsRepo.findAllByOrderByTimestampDesc(nextPageWithSixClips);
     }
 
     @GetMapping("/user/{userId}/clips")
@@ -62,16 +68,7 @@ public class ClipsController {
         return new ResponseEntity("No clip found",HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @PostMapping("/clip/update")
-    public ResponseEntity getClip(@RequestBody Clips clipDetails){
-        Optional<Clips> clip= clipsRepo.findById(clipDetails.getId());
-        if(clip.isPresent()){
-            clip.get().setTitle(clipDetails.getTitle());
-            clipsRepo.save(clip.get());
-            return new ResponseEntity("Clip updated successfully",HttpStatus.OK);
-        }
-        return new ResponseEntity("No clip found",HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+
 
     @PostMapping("/clips/add")
     public ResponseEntity addClip(@RequestParam("userId") String userId,
@@ -94,6 +91,27 @@ public class ClipsController {
         clipsRepo.save(clip);
 
         return  new ResponseEntity("Clip added successfully",HttpStatus.CREATED);
+    }
+
+    @PostMapping("/clip/update")
+    public ResponseEntity getClip(@RequestBody Clips clipDetails){
+        Optional<Clips> clip= clipsRepo.findById(clipDetails.getId());
+        if(clip.isPresent()){
+            clip.get().setTitle(clipDetails.getTitle());
+            clipsRepo.save(clip.get());
+            return new ResponseEntity("Clip updated successfully",HttpStatus.OK);
+        }
+        return new ResponseEntity("No clip found",HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @DeleteMapping("/clip/{id}}")
+    public ResponseEntity deleteClip(@PathVariable String id){
+        Optional<Clips> clip= clipsRepo.findById(id);
+        if(clip.isPresent()){
+            clipsRepo.deleteById(id);
+            return new ResponseEntity("Clip deleted successfully",HttpStatus.OK);
+        }
+        return new ResponseEntity("No clip found",HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 }
