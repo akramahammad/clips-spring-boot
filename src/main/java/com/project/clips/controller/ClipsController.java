@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.*;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:4200",methods = RequestMethod.GET)
+@CrossOrigin
 public class ClipsController {
 
     @Autowired
@@ -104,7 +104,7 @@ public class ClipsController {
         return new ResponseEntity("No clip found",HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @DeleteMapping("/clip/{id}}")
+    @DeleteMapping("/clip/{id}")
     public ResponseEntity deleteClip(@PathVariable String id){
         Optional<Clips> clip= clipsRepo.findById(id);
         if(clip.isPresent()){
