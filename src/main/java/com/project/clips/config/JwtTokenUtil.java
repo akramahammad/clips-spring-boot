@@ -18,7 +18,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 public class JwtTokenUtil implements Serializable{
 
 	private static final long serialVersionUID = 1L;
-	public static final long JWT_TOKEN_VALIDITY = 100;
+	public static final long JWT_TOKEN_VALIDITY = 1800;
 
 	@Value("${jwt.secret}")
 	private String secret;

@@ -110,7 +110,7 @@ public class ClipsController {
         if (user==null){
             return ResponseEntity.status(HttpStatus.OK).body("Email available for use");
         }
-        return  ResponseEntity.status(HttpStatus.CONFLICT).body("Email already registered");
+        return  ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Email already registered");
     }
 
     @GetMapping("/clips")
@@ -125,7 +125,6 @@ public class ClipsController {
 
     @GetMapping("/user/clips")
     public List<Clips> getClipsForUser(
-//            @PathVariable("userId") String userId,
                                        @RequestParam(value = "order" ,required = false) String order){
         logger.info("Inside get clips for user");
 
