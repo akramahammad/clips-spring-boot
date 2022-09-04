@@ -2,10 +2,12 @@ package com.project.clips.controller;
 
 import com.project.clips.config.JwtTokenUtil;
 import com.project.clips.entity.Clips;
+import com.project.clips.entity.TokenRequest;
 import com.project.clips.entity.User;
 import com.project.clips.repo.ClipsRepo;
 import com.project.clips.repo.UserRepo;
 import com.project.clips.service.ClipsUtil;
+import io.jsonwebtoken.ExpiredJwtException;
 import org.bson.BsonBinarySubType;
 import org.bson.types.Binary;
 import org.slf4j.Logger;
@@ -106,11 +108,34 @@ public class ClipsController {
 
     @GetMapping("/user/email/{email}")
     public ResponseEntity<String> checkEmailAvailable(@PathVariable("email") String email){
+        logger.info("Inside checkEmailAvailable");
         User user=userRepo.findByEmail(email);
         if (user==null){
             return ResponseEntity.status(HttpStatus.OK).body("Email available for use");
         }
-        return  ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Email already registered");
+        return  ResponseEntity.status(HttpStatus.OK).body("Email already registered");
+    }
+
+    @PostMapping("/user/validate/token")
+    public ResponseEntity<String> validateToken(@RequestBody TokenRequest request){
+        String token=request.getToken();
+        try{
+            String email=jwtTokenUtil.getUsernameFromToken(token);
+            UserDetails userDetails=userDetailsService.loadUserByUsername(email);
+            if (userDetails!=null){
+                boolean validToken=jwtTokenUtil.validateToken(token,userDetails);
+                if(validToken) return ResponseEntity.status(200).body("Valid Token");
+            }
+
+            return ResponseEntity.status(500).body("Invalid token");
+        }
+        catch (ExpiredJwtException exception){
+            return ResponseEntity.status(500).body("Token Expired");
+        }
+        catch (Exception exception) {
+            logger.error("Error in validating token");
+            return ResponseEntity.status(500).body("Error in validating token");
+        }
     }
 
     @GetMapping("/clips")
@@ -124,15 +149,17 @@ public class ClipsController {
     }
 
     @GetMapping("/user/clips")
-    public List<Clips> getClipsForUser(
+    public ResponseEntity<List<Clips>> getClipsForUser(
                                        @RequestParam(value = "order" ,required = false) String order){
         logger.info("Inside get clips for user");
 
         User user=clipsUtil.loadUserFromSecurityContext();
         if(order!=null && !order.isEmpty() && order.equals("oldest")){
-            return clipsRepo.findByUserIdOrderByTimestampAsc(user.getId());
+            return ResponseEntity.status(200)
+                    .body(clipsRepo.findByUserIdOrderByTimestampAsc(user.getId()));
         }
-        return clipsRepo.findByUserIdOrderByTimestampDesc(user.getId());
+        return ResponseEntity.status(200)
+                .body(clipsRepo.findByUserIdOrderByTimestampDesc(user.getId()));
     }
 
     @GetMapping("/clips/{id}")
@@ -148,7 +175,7 @@ public class ClipsController {
 
 
     @PostMapping("/clips/add")
-    public ResponseEntity<Map> addClip(
+    public ResponseEntity<Map<String,String>> addClip(
                                   @RequestParam("title") String title,
                                   @RequestParam("clipFileName") String clipFileName,
                                   @RequestParam("clipFile") MultipartFile clipFile,
@@ -195,5 +222,7 @@ public class ClipsController {
         }
         return new ResponseEntity("No clip found",HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+
 //max size handle, email handle,swagger doc
 }

@@ -40,7 +40,7 @@ public class JwtFilter extends OncePerRequestFilter {
 		logger.info("Starting Jwt Filter");
 		
 		String reqToken=request.getHeader("Authorization");
-		
+		logger.info("Request header ::{}",reqToken);
 		if(reqToken!=null && reqToken.startsWith("Bearer ")) {
 			
 			String token=reqToken.substring(7);
