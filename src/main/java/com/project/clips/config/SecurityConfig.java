@@ -14,6 +14,10 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -34,14 +38,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
-                .mvcMatchers("/user/clips").authenticated()
-                .mvcMatchers("/clips/add").authenticated()
-                .mvcMatchers("/clip/update").authenticated()
-                .mvcMatchers(HttpMethod.DELETE,"/clip/**").authenticated()
+                .mvcMatchers("/user/clips","/clips/add","/clip/update","/clip/**").authenticated()
                 .anyRequest().permitAll()
                 .and().exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and().csrf().disable();
+        http.cors( corsCustomizer ->{
+            CorsConfigurationSource corsConfigurationSource=request -> {
+                CorsConfiguration corsConfiguration=new CorsConfiguration();
+                corsConfiguration.addAllowedHeader("*");
+                corsConfiguration.addAllowedMethod("*");
+                corsConfiguration.addAllowedOrigin("*");
+                return corsConfiguration;
+            };
+            corsCustomizer.configurationSource(corsConfigurationSource);
+        });
 
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
