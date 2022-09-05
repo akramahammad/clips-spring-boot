@@ -223,6 +223,4 @@ public class ClipsController {
         return new ResponseEntity("No clip found",HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-
-//max size handle, email handle,swagger doc
 }
